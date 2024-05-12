@@ -1,4 +1,5 @@
-function searchTracks() {
+// Menggunakan async/await untuk penanganan promise
+async function searchTracks() {
     const query = document.getElementById('searchInput').value.trim();
     if (query === '') {
         alert('Please enter a search query.');
@@ -7,18 +8,16 @@ function searchTracks() {
 
     $('#waitModal').modal('show');
 
-    fetch(`https://spotifyapi.caliphdev.com/api/search/tracks?q=${query}`)
-        .then(response => response.json())
-        .then(data => {
-            const musicGallery = document.getElementById('musicGallery');
-            musicGallery.innerHTML = '';
+    try {
+        const response = await fetch(`https://spotifyapi.caliphdev.com/api/search/tracks?q=${query}`);
+        const data = await response.json();
 
-            if (data.length === 0) {
-                musicGallery.innerHTML = '<p class="text-center text-gray-600">No results found.</p>';
-                $('#waitModal').modal('hide');
-                return;
-            }
+        const musicGallery = document.getElementById('musicGallery');
+        musicGallery.innerHTML = '';
 
+        if (data.length === 0) {
+            musicGallery.innerHTML = '<p class="text-center text-gray-600">No results found.</p>';
+        } else {
             data.forEach(track => {
                 const card = `
                     <div class="bg-gray-800 rounded-lg overflow-hidden shadow-md">
@@ -32,43 +31,43 @@ function searchTracks() {
                 `;
                 musicGallery.innerHTML += card;
             });
-
-            $('#waitModal').modal('hide');
-        })
-        .catch(error => {
-            console.error('Error fetching tracks:', error);
-            alert('Failed to fetch tracks. Please try again later.');
-            $('#waitModal').modal('hide');
-        });
+        }
+    } catch (error) {
+        console.error('Error fetching tracks:', error);
+        alert('Failed to fetch tracks. Please try again later.');
+    } finally {
+        $('#waitModal').modal('hide');
+    }
 }
 
-function showTrackInfo(trackUrl) {
+async function showTrackInfo(trackUrl) {
     $('#waitModal').modal('show');
 
-    fetch(`https://spotifyapi.caliphdev.com/api/info/track?url=${trackUrl}`)
-        .then(response => response.json())
-        .then(data => {
-            const modalTitle = document.getElementById('modalTitle');
-            const modalContent = document.getElementById('modalContent');
+    try {
+        const response = await fetch(`https://spotifyapi.caliphdev.com/api/info/track?url=${trackUrl}`);
+        const data = await response.json();
 
-            modalTitle.textContent = data.title;
-            modalContent.innerHTML = `
-                <img src="${data.thumbnail}" alt="${data.title}" class="w-100 rounded">
-                <p><strong>Artist:</strong> ${data.artist}</p>
-                <p><strong>Album:</strong> ${data.album}</p>
-                <audio controls class="mx-auto mt-4">
-                    <source src="https://spotifyapi.caliphdev.com/api/download/track?url=${trackUrl}" type="audio/mp3">
-                    Your browser does not support the audio element.
-                </audio>
-            `;
+        const modalTitle = document.getElementById('modalTitle');
+        const modalContent = document.getElementById('modalContent');
 
-            $('#trackModal').modal('show');
-        })
-        .catch(error => {
-            console.error('Error fetching track info:', error);
-            alert('Failed to fetch track info. Please try again later.');
-            $('#waitModal').modal('hide');
-        });
+        modalTitle.textContent = data.title;
+        modalContent.innerHTML = `
+            <img src="${data.thumbnail}" alt="${data.title}" class="w-100 rounded">
+            <p><strong>Artist:</strong> ${data.artist}</p>
+            <p><strong>Album:</strong> ${data.album}</p>
+            <audio controls class="mx-auto mt-4">
+                <source src="https://spotifyapi.caliphdev.com/api/download/track?url=${trackUrl}" type="audio/mp3">
+                Your browser does not support the audio element.
+            </audio>
+        `;
+
+        $('#trackModal').modal('show');
+    } catch (error) {
+        console.error('Error fetching track info:', error);
+        alert('Failed to fetch track info. Please try again later.');
+    } finally {
+        $('#waitModal').modal('hide');
+    }
 }
 
 function closeModal() {
